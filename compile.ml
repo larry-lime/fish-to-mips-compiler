@@ -32,6 +32,7 @@ let reset() = (label_counter := 0; variables := VarSet.empty)
 
 (* find all of the variables in a program and add them to
  * the set variables *)
+(* TODO: Find all variables *)
 let rec collect_vars (p : Ast.program) : unit = 
     (*************************************************************)
     raise IMPLEMENT_ME
@@ -41,6 +42,7 @@ let rec collect_vars (p : Ast.program) : unit =
  * Note that a "Return" is accomplished by placing the resulting
  * value in R2 and then doing a Jr R31.
  *)
+(* TODO: Compile Fish *)
 let rec compile_stmt ((s,_):Ast.stmt) : inst list = 
     (*************************************************************)
     raise IMPLEMENT_ME
