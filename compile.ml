@@ -81,8 +81,10 @@ let reset () =
  * the set variables *)
 (* TODO: Find all variables *)
 let rec collect_vars (p : Ast.program) : unit =
+  (* print_string ("Collected vars statement: " ^ stmt2string p ^ "\n"); *)
   (*************************************************************)
-  raise IMPLEMENT_ME
+  ()
+
 (*************************************************************)
 
 (* compiles a Fish statement down to a list of MIPS instructions.
@@ -90,10 +92,49 @@ let rec collect_vars (p : Ast.program) : unit =
  * value in R2 and then doing a Jr R31.
  *)
 (* TODO: Compile Fish *)
-let rec compile_stmt ((s, _) : Ast.stmt) : inst list =
+let rec exp2mips ((e, p) : Ast.exp) : inst list =
+  print_string ("Expression: " ^ exp2string (e, p) ^ "\n");
+  match e with
+  | Int j -> [ Li (R2, Word32.fromInt j) ]
+  | Var x -> [ La (R2, x); Lw (R2, R2, Word32.fromInt 0) ]
+  | Binop (e1, b, e2) -> (
+      let t = new_temp () in
+      exp2mips e1
+      @ [ La (R1, t); Sw (R2, R1, Word32.fromInt 0) ]
+      @ exp2mips e2
+      @ [ La (R1, t); Lw (R1, R1, Word32.fromInt 0) ]
+      @
+      match b with
+      | Plus -> [ Add (R2, R2, Reg R1) ]
+      | _ -> raise IMPLEMENT_EXPRESSION)
+  | Assign (x, e) -> exp2mips e @ [ La (R1, x); Sw (R2, R1, Word32.fromInt 0) ]
+  | _ -> raise IMPLEMENT_EXPRESSION
+
+let rec compile_stmt ((s, p) : Ast.stmt) : inst list =
   (*************************************************************)
-  raise IMPLEMENT_ME
-(*************************************************************)
+  print_string ("Statement:" ^ stmt2string (s, p) ^ "\n");
+  match s with
+  | Exp e -> exp2mips e
+  | Seq (s1, s2) -> compile_stmt s1 @ compile_stmt s2
+  | If (e, s1, s2) ->
+      let else_l = new_label () in
+      let end_l = new_label () in
+      exp2mips e
+      @ [ Beq (R2, R0, else_l) ]
+      @ compile_stmt s1 @ [ J end_l; Label else_l ] @ compile_stmt s2
+      @ [ Label end_l ]
+  | While (e, s) ->
+      let test_l = new_label () in
+      let top_l = new_label () in
+      [ J test_l; Label top_l ] @ compile_stmt s @ [ Label test_l ] @ exp2mips e
+      @ [ Bne (R2, R0, top_l) ]
+  (*TODO: Check that this is right*)
+  | For (e1, e2, e3, s) ->
+      compile_stmt
+        (Seq ((Exp e1, 1), (While (e2, (Seq (s, (Exp e3, 1)), 1)), 1)), 1)
+  | Return e -> exp2mips e @ [ Jr R31 ]
+
+(* *********************************************************** *)
 
 (* compiles Fish AST down to MIPS instructions and a list of global vars *)
 let compile (p : Ast.program) : result =
