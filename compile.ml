@@ -64,6 +64,7 @@ end)
 let variables : VarSet.t ref = ref VarSet.empty
 
 (* generate a fresh temporary variable and store it in the variables set. *)
+(*NOTE: Likely used in collect vars*)
 let rec new_temp () =
   let t = "T" ^ string_of_int (new_int ()) in
   (* make sure we don't already have a variable with the same name! *)
@@ -79,7 +80,7 @@ let reset () =
 
 (* find all of the variables in a program and add them to
  * the set variables *)
-(* TODO: Find all variables *)
+(* NOTE: This return unit (which is like None) *)
 let rec collect_vars (p : Ast.program) : unit =
   (* print_string ("Collected vars statement: " ^ stmt2string p ^ "\n"); *)
   (*************************************************************)
@@ -93,26 +94,26 @@ let rec collect_vars (p : Ast.program) : unit =
  *)
 (* TODO: Compile Fish *)
 let rec exp2mips ((e, p) : Ast.exp) : inst list =
-  print_string ("Expression: " ^ exp2string (e, p) ^ "\n");
+  (* print_string ("Expression: " ^ exp2string (e, p) ^ "\n"); *)
   match e with
   | Int j -> [ Li (R2, Word32.fromInt j) ]
   | Var x -> [ La (R2, x); Lw (R2, R2, Word32.fromInt 0) ]
   | Binop (e1, b, e2) -> (
       let t = new_temp () in
       exp2mips e1
-      @ [ La (R1, t); Sw (R2, R1, Word32.fromInt 0) ]
+      @ [ La (R3, t); Sw (R2, R3, Word32.fromInt 0) ]
       @ exp2mips e2
-      @ [ La (R1, t); Lw (R1, R1, Word32.fromInt 0) ]
+      @ [ La (R3, t); Lw (R3, R3, Word32.fromInt 0) ]
       @
       match b with
-      | Plus -> [ Add (R2, R2, Reg R1) ]
+      | Plus -> [ Add (R2, R2, Reg R3) ]
       | _ -> raise IMPLEMENT_EXPRESSION)
-  | Assign (x, e) -> exp2mips e @ [ La (R1, x); Sw (R2, R1, Word32.fromInt 0) ]
+  | Assign (x, e) -> exp2mips e @ [ La (R3, x); Sw (R2, R3, Word32.fromInt 0) ]
   | _ -> raise IMPLEMENT_EXPRESSION
 
 let rec compile_stmt ((s, p) : Ast.stmt) : inst list =
   (*************************************************************)
-  print_string ("Statement:" ^ stmt2string (s, p) ^ "\n");
+  (* print_string ("Statement:" ^ stmt2string (s, p) ^ "\n"); *)
   match s with
   | Exp e -> exp2mips e
   | Seq (s1, s2) -> compile_stmt s1 @ compile_stmt s2
