@@ -1,7 +1,46 @@
 (* Compile Fish AST to MIPS AST *)
 open Mips
+open Ast
 
-exception IMPLEMENT_ME
+exception IMPLEMENT_EXPRESSION
+exception IMPLEMENT_VAR_COLLECTION
+
+(* The functions below are used to convert expressions and statements to strings. Useful for debugging *)
+let rec binop2string = function
+  | Plus -> "+"
+  | Minus -> "-"
+  | Times -> "*"
+  | Div -> "/"
+  | Eq -> "=="
+  | Neq -> "!="
+  | Lt -> "<"
+  | Lte -> "<="
+  | Gt -> ">"
+  | Gte -> ">="
+
+let rec exp2string ((exp, pos) : exp) : string =
+  match exp with
+  | Int n -> string_of_int n
+  | Var v -> v
+  | Binop (e1, op, e2) ->
+      "(" ^ exp2string e1 ^ " " ^ binop2string op ^ " " ^ exp2string e2 ^ ")"
+  | Not e -> "!(" ^ exp2string e ^ ")"
+  | And (e1, e2) -> "(" ^ exp2string e1 ^ " && " ^ exp2string e2 ^ ")"
+  | Or (e1, e2) -> "(" ^ exp2string e1 ^ " || " ^ exp2string e2 ^ ")"
+  | Assign (v, e) -> v ^ " = " ^ exp2string e
+
+let rec stmt2string ((s, pos) : stmt) : string =
+  match s with
+  | Exp e -> exp2string e
+  | Seq (s1, s2) -> stmt2string s1 ^ "; " ^ stmt2string s2
+  | If (e, s1, s2) ->
+      "if " ^ exp2string e ^ " then " ^ stmt2string s1 ^ " else "
+      ^ stmt2string s2
+  | While (e, s1) -> "while " ^ exp2string e ^ " do " ^ stmt2string s1
+  | For (e1, e2, e3, s1) ->
+      "for " ^ exp2string e1 ^ "; " ^ exp2string e2 ^ "; " ^ exp2string e3
+      ^ " do " ^ stmt2string s1
+  | Return e -> "return " ^ exp2string e
 
 type result = { code : Mips.inst list; data : Mips.label list }
 
