@@ -46,6 +46,7 @@ type reg =
 
 type operand = Reg of reg | Immed of Word32.word
 
+(* NOTE: These are all the MIPS operations I need*)
 type inst =
   | Add of reg * reg * operand
   | And of reg * reg * operand

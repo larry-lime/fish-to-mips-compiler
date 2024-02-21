@@ -1,4 +1,8 @@
 *.cmo
 *.cmi
+lex.ml
+*.txt
+compiled/*
+outputs/*
 parse.ml
 parse.mli

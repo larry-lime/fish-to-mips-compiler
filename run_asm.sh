@@ -4,8 +4,7 @@ if [[ -z $1 ]]; then
 	FILES=$( (ls *.s))
 	for f in $FILES; do
 		echo "Running: $f"
-		spim -file "$f"
-		echo ""
+		spim -file "$f" >../outputs/${f%.s}.out
 	done
 else
 	spim -file $1

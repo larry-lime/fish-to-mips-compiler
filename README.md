@@ -1,4 +1,4 @@
-# PS3: 6 points
+# Fish to MIPS Compiler
 
 The goal of this problem set is to compile Fish abstract syntax down
 to MIPS assembly code.
