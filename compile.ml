@@ -82,7 +82,6 @@ let reset () =
  * the set variables *)
 (* NOTE: This return unit (which is like None) *)
 let rec collect_vars (p : Ast.program) : unit =
-  (* print_string ("Collected vars statement: " ^ stmt2string p ^ "\n"); *)
   (*************************************************************)
   ()
 
@@ -92,9 +91,7 @@ let rec collect_vars (p : Ast.program) : unit =
  * Note that a "Return" is accomplished by placing the resulting
  * value in R2 and then doing a Jr R31.
  *)
-(* TODO: Compile Fish *)
 let rec exp2mips ((e, p) : Ast.exp) : inst list =
-  (* print_string ("Expression: " ^ exp2string (e, p) ^ "\n"); *)
   match e with
   | Int j -> [ Li (R2, Word32.fromInt j) ]
   | Var x -> [ La (R2, x); Lw (R2, R2, Word32.fromInt 0) ]
@@ -130,7 +127,6 @@ and binop_helper e1 e2 =
 
 let rec compile_stmt ((s, p) : Ast.stmt) : inst list =
   (*************************************************************)
-  (* print_string ("Statement:" ^ stmt2string (s, p) ^ "\n"); *)
   match s with
   | Exp e -> exp2mips e
   | Seq (s1, s2) -> compile_stmt s1 @ compile_stmt s2
