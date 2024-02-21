@@ -107,7 +107,15 @@ let rec exp2mips ((e, p) : Ast.exp) : inst list =
       @
       match b with
       | Plus -> [ Add (R2, R2, Reg R3) ]
-      | _ -> raise IMPLEMENT_EXPRESSION)
+      | Minus -> [ Sub (R2, R3, R2) ]
+      | Times -> [ Mul (R2, R2, R3) ]
+      | Div -> [ Div (R2, R3, R2) ]
+      | Eq -> [ Seq (R2, R3, R2) ]
+      | Neq -> [ Sne (R2, R3, R2) ]
+      | Lt -> [ Slt (R2, R3, R2) ]
+      | Lte -> [ Sle (R2, R3, R2) ]
+      | Gt -> [ Sgt (R2, R3, R2) ]
+      | Gte -> [ Sge (R2, R3, R2) ])
   | Assign (x, e) -> exp2mips e @ [ La (R3, x); Sw (R2, R3, Word32.fromInt 0) ]
   | _ -> raise IMPLEMENT_EXPRESSION
 
