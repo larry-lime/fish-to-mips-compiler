@@ -99,11 +99,7 @@ let rec exp2mips ((e, p) : Ast.exp) : inst list =
   | Int j -> [ Li (R2, Word32.fromInt j) ]
   | Var x -> [ La (R2, x); Lw (R2, R2, Word32.fromInt 0) ]
   | Binop (e1, b, e2) -> (
-      let t = new_temp () in
-      exp2mips e1
-      @ [ La (R3, t); Sw (R2, R3, Word32.fromInt 0) ]
-      @ exp2mips e2
-      @ [ La (R3, t); Lw (R3, R3, Word32.fromInt 0) ]
+      binop_helper e1 e2
       @
       match b with
       | Plus -> [ Add (R2, R2, Reg R3) ]
@@ -117,7 +113,20 @@ let rec exp2mips ((e, p) : Ast.exp) : inst list =
       | Gt -> [ Sgt (R2, R3, R2) ]
       | Gte -> [ Sge (R2, R3, R2) ])
   | Assign (x, e) -> exp2mips e @ [ La (R3, x); Sw (R2, R3, Word32.fromInt 0) ]
-  | _ -> raise IMPLEMENT_EXPRESSION
+  | Not e -> exp2mips e @ [ Sgt (R2, R2, R0); Seq (R2, R2, R0) ]
+  | Or (e1, e2) ->
+      binop_helper e1 e2
+      @ [ Sgt (R2, R2, R0); Sgt (R3, R3, R0); Or (R2, R2, Reg R3) ]
+  | And (e1, e2) ->
+      binop_helper e1 e2
+      @ [ Sgt (R2, R2, R0); Sgt (R3, R3, R0); And (R2, R2, Reg R3) ]
+
+and binop_helper e1 e2 =
+  let t = new_temp () in
+  exp2mips e1
+  @ [ La (R3, t); Sw (R2, R3, Word32.fromInt 0) ]
+  @ exp2mips e2
+  @ [ La (R3, t); Lw (R3, R3, Word32.fromInt 0) ]
 
 let rec compile_stmt ((s, p) : Ast.stmt) : inst list =
   (*************************************************************)
