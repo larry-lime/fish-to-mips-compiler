@@ -81,9 +81,44 @@ let reset () =
 (* find all of the variables in a program and add them to
  * the set variables *)
 (* NOTE: This return unit (which is like None) *)
+let rec collect_vars_exp ((e, _) : exp) =
+  match e with
+  | Int _ -> ()
+  | Var x -> variables := VarSet.add x !variables
+  | Binop (e1, _, e2) ->
+      collect_vars_exp e1;
+      collect_vars_exp e2
+  | Not e -> collect_vars_exp e
+  | And (e1, e2) | Or (e1, e2) ->
+      collect_vars_exp e1;
+      collect_vars_exp e2
+  | Assign (x, e) ->
+      variables := VarSet.add x !variables;
+      collect_vars_exp e
+
+let rec collect_vars_stmt ((s, _) : stmt) =
+  match s with
+  | Exp e -> collect_vars_exp e
+  | Seq (s1, s2) ->
+      collect_vars_stmt s1;
+      collect_vars_stmt s2
+  | If (e, s1, s2) ->
+      collect_vars_exp e;
+      collect_vars_stmt s1;
+      collect_vars_stmt s2
+  | While (e, s) ->
+      collect_vars_exp e;
+      collect_vars_stmt s
+  | For (e1, e2, e3, s) ->
+      collect_vars_exp e1;
+      collect_vars_exp e2;
+      collect_vars_exp e3;
+      collect_vars_stmt s
+  | Return e -> collect_vars_exp e
+
 let rec collect_vars (p : Ast.program) : unit =
   (*************************************************************)
-  ()
+  collect_vars_stmt p
 
 (*************************************************************)
 
@@ -125,6 +160,7 @@ and binop_helper e1 e2 =
   @ exp2mips e2
   @ [ La (R3, t); Lw (R3, R3, Word32.fromInt 0) ]
 
+(*FIXME: Nested for loops and if statements are not working*)
 let rec compile_stmt ((s, p) : Ast.stmt) : inst list =
   (*************************************************************)
   match s with
@@ -142,7 +178,6 @@ let rec compile_stmt ((s, p) : Ast.stmt) : inst list =
       let top_l = new_label () in
       [ J test_l; Label top_l ] @ compile_stmt s @ [ Label test_l ] @ exp2mips e
       @ [ Bne (R2, R0, top_l) ]
-  (*TODO: Check that this is right*)
   | For (e1, e2, e3, s) ->
       compile_stmt
         (Seq ((Exp e1, 1), (While (e2, (Seq (s, (Exp e3, 1)), 1)), 1)), 1)
