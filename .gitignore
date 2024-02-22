@@ -2,6 +2,8 @@
 *.cmi
 lex.ml
 *.txt
+test/*.sexp
 outputs/*
+compiled/*
 parse.ml
 parse.mli
