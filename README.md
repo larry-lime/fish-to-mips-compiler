@@ -1,6 +1,6 @@
 # Fish to MIPS Compiler
 
-This is a compiler for a simplified Fortran like language called Fish.
+This is a work in progress compiler for a simplified Fortran like language called Fish.
 
 ## Getting Started
 
